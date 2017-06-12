@@ -44,76 +44,56 @@ void UpdateState(Curve& Curve)
 void UpdateGeometryFromPosition(Curve& Curve)
 {
     int NP = Curve.Curve.size();  //store number of points in knot Curve
-    double dxds, dyds, dzds,bx, by, bz;
-    double T[3][3];
-    double N[2][3];
-    double B[3];
-    double deltas[3]; double ds;
-    double curvature[2];double torsion;
+    double torsion;
     for(int s=0; s<NP; s++)    //fwd diff (defined on connecting line) (cell data in paraview)
     {
-        for(int i=0;i<3;i++)
-        {
-
-            double dx = (Curve.Curve[incp(s,i+1,NP)].xcoord - Curve.Curve[incp(s,i,NP)].xcoord);   //central diff as a is defined on the points
-            double dy = (Curve.Curve[incp(s,i+1,NP)].ycoord - Curve.Curve[incp(s,i,NP)].ycoord);
-            double dz = (Curve.Curve[incp(s,i+1,NP)].zcoord - Curve.Curve[incp(s,i,NP)].zcoord);
-            deltas[i] = sqrt(dx*dx+dy*dy+dz*dz);
-            T[i][0] = dx/(deltas[i]);
-            T[i][1] = dy/(deltas[i]);
-            T[i][2] = dz/(deltas[i]);
-            if(i==0)
-            {
-                Curve.Curve[s].length = deltas[0];
-                dxds = T[0][0];
-                dyds = T[0][1];
-                dzds = T[0][2];
-                ds = deltas[0];
-            }
-        }
-        for(int i=0;i<2;i++)
-        {
-            N[i][0] = (T[i+1][0]-T[i][0])/deltas[i];
-            N[i][1] = (T[i+1][1]-T[i][1])/deltas[i];
-            N[i][2] = (T[i+1][2]-T[i][2])/deltas[i];
-            curvature[i] = sqrt(N[i][0]*N[i][0]+N[i][1]*N[i][1]+N[i][2]*N[i][2]);
-            N[i][0] /=curvature[i];
-            N[i][1] /=curvature[i];
-            N[i][2] /=curvature[i];
-        }
-        //compute the binormal with a cross product 
-        B[0] = T[0][1]*N[0][2] - N[0][1]*T[0][2] ;
-        B[1] = T[0][2]*N[0][0] - N[0][2]*T[0][0] ;
-        B[2] = T[0][0]*N[0][1] - N[0][0]*T[0][1] ;
-        // this is dn/ds +kt
-        double vx= (N[1][0]-N[0][0])/deltas[0] +curvature[0]*T[0][0];
-        double vy= (N[1][1]-N[0][1])/deltas[0]+ curvature[0]*T[0][1];
-        double vz= (N[1][2]-N[0][2])/deltas[0] + curvature[0]*T[0][2];
-        // lets get the torsion by computing the x component of the binomral, and looking at the scale factor between it and dn/ds+kt
-        double torsion = sqrt(vx*vx +vy*vy +vz*vz);
-        // we have lost the sign of the torsion here. to get it , compare the signs of dn/dx+kt and the binromal
-        double sign = 1;
-        (vx*B[0] + vy*B[1] + vz*B[2] >0)? sign = 1: sign = -1;
-        torsion *=sign;
-
-        Curve.Curve[s].curvature = curvature[0];
-        Curve.Curve[s].torsion = torsion ;
-        Curve.Curve[s].tx = T[0][0] ;
-        Curve.Curve[s].ty = T[0][1] ;
-        Curve.Curve[s].tz = T[0][2] ;
-        Curve.Curve[s].nx = N[0][0] ;
-        Curve.Curve[s].ny = N[0][1] ;
-        Curve.Curve[s].nz = N[0][2] ;
-        Curve.Curve[s].bx = B[0] ;
-        Curve.Curve[s].by = B[1] ;
-        Curve.Curve[s].bz = B[2] ;
-
-        Curve.length += Curve.Curve[s].length;
-        Curve.xavgpos += Curve.Curve[s].xcoord/NP;
-        Curve.yavgpos += Curve.Curve[s].ycoord/NP;
-        Curve.zavgpos += Curve.Curve[s].zcoord/NP;
+        // forward difference on the tangents
+        double dx = (Curve.Curve[incp(s,1,NP)].xcoord - Curve.Curve[incp(s,0,NP)].xcoord);   //central diff as a is defined on the points
+        double dy = (Curve.Curve[incp(s,1,NP)].ycoord - Curve.Curve[incp(s,0,NP)].ycoord);
+        double dz = (Curve.Curve[incp(s,1,NP)].zcoord - Curve.Curve[incp(s,0,NP)].zcoord);
+        double deltas = sqrt(dx*dx+dy*dy+dz*dz);
+        Curve.Curve[s].tx = dx/(deltas);
+        Curve.Curve[s].ty = dy/(deltas);
+        Curve.Curve[s].tz = dz/(deltas);
+        Curve.Curve[s].length = deltas;
     }
+    for(int s=0; s<NP; s++)    //fwd diff (defined on connecting line) (cell data in paraview)
+    {
+        double nx = 2.0*(Curve.Curve[s].tx-Curve.Curve[incp(s,-1,NP)].tx)/(Curve.Curve[s].length+Curve.Curve[incp(s,-1,NP)].length);
+        double ny = 2.0*(Curve.Curve[s].ty-Curve.Curve[incp(s,-1,NP)].ty)/(Curve.Curve[s].length+Curve.Curve[incp(s,-1,NP)].length);
+        double nz = 2.0*(Curve.Curve[s].tz-Curve.Curve[incp(s,-1,NP)].tz)/(Curve.Curve[s].length+Curve.Curve[incp(s,-1,NP)].length);
+        double curvature = sqrt(nx*nx+ny*ny+nz*nz);
+        nx /=curvature;
+        ny /=curvature;
+        ny /=curvature;
+        double tx = Curve.Curve[s].tx ;
+        double ty =  Curve.Curve[s].ty ;
+        double tz = Curve.Curve[s].tz ;
+        double bx = ty*nz - tz*ny;
+        double by = tz*nx - tx*nz;
+        double bz = tx*ny - ty*nx;
+        Curve.Curve[s].nx = nx ;
+        Curve.Curve[s].ny = ny ;
+        Curve.Curve[s].nz = nz ;
+        Curve.Curve[s].bx = bx ;
+        Curve.Curve[s].by = by ;
+        Curve.Curve[s].bz = bz ;
+        Curve.Curve[s].curvature = curvature ;
+    }
+    // torsions with a central difference
+    for(int s=0; s<NP; s++)   
+    {
+        double bx = Curve.Curve[s].bx;
+        double by =  Curve.Curve[s].by;
+        double bz = Curve.Curve[s].bz;
 
+        double dnxds = 2.0*(Curve.Curve[incp(s,1,NP)].nx-Curve.Curve[incp(s,-1,NP)].nx)/(Curve.Curve[incp(s,1,NP)].length+Curve.Curve[incp(s,-1,NP)].length);
+        double dnyds = 2.0*(Curve.Curve[incp(s,1,NP)].ny-Curve.Curve[incp(s,-1,NP)].ny)/(Curve.Curve[incp(s,1,NP)].length+Curve.Curve[incp(s,-1,NP)].length);
+        double dnzds = 2.0*(Curve.Curve[incp(s,1,NP)].nz-Curve.Curve[incp(s,-1,NP)].nz)/(Curve.Curve[incp(s,1,NP)].length+Curve.Curve[incp(s,-1,NP)].length);
+
+        torsion = bx*dnxds+by*dnyds+bz*dnzds;
+        Curve.Curve[s].torsion = torsion ;
+    }
 }
 
 void UpdateVelocityFromGeometry(Curve& Curve)

@@ -9,4 +9,4 @@ const double starttime = 0;       //total time of simulation (simulation units)
 const double CurvePrintTime = 1; // print out the knot , without the velocity
 // OPTION - what grid values do you want/ timestep
 // timestep
-const double dtime = 0.000001;         //size of each time step
+const double dtime = 0.001;         //size of each time step
