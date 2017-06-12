@@ -148,18 +148,19 @@ void UpdatePositionFromVelocity(Curve& Curve)
     Curve.InSync = 0;
 }
 
-void PrintCurve( double t, Curve& Curve)
+void PrintCurve(double t, const Curve& Curve)
 {
     stringstream ss;
     ss << "globaldata" <<  ".txt";
     ofstream globalout (ss.str().c_str(), std::ofstream::app);
-    globalout << t << '\t' << Curve.xavgpos << '\t' << Curve.yavgpos << '\t' << Curve.zavgpos << '\t' << Curve.length << '\n';
+    int printtime = (int)(floor(t+0.5));
+    globalout << printtime << '\t' << Curve.xavgpos << '\t' << Curve.yavgpos << '\t' << Curve.zavgpos << '\t' << Curve.length << '\n';
     globalout.close();
 
     ss.str("");
     ss.clear();       
 
-    ss << "Curve"<< "_" << t <<  ".vtk";
+    ss << "Curve"<< "_" << printtime <<  ".vtk";
     ofstream CurveOutputStream (ss.str().c_str());
 
     int i;

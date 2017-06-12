@@ -49,7 +49,7 @@ void UpdateState(Curve& Curve);
 void UpdateVelocityFromGeometry(Curve& Curve);
 void UpdatePositionFromVelocity(Curve& Curve);
 void UpdateGeometryFromPosition(Curve& Curve);
-void PrintCurve( double t, Curve& Curve);
+void PrintCurve( double t, const Curve& Curve);
 void InitialiseCurve(string CurveFilename,Curve& Curve);
 // little inline guys
 inline int incp(int i, int p, int N);    //increment i with p for periodic boundary
