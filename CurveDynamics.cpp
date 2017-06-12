@@ -1,7 +1,7 @@
 // Curve Dynamics 
 // Created by Jack Binysh 12/06/2017
 
-#include "FN_Knot.h"    
+#include "CurveDynamics.h"    
 #include <math.h>
 #include <string.h>
 

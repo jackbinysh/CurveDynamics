@@ -1,4 +1,3 @@
-//Constants.h
 #include <string>
 /* CHANGE THESE OPTIONS */
 
