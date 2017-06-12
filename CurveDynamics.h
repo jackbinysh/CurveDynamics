@@ -52,7 +52,6 @@ void UpdateGeometryFromPosition(Curve& Curve);
 void PrintCurve( double t, Curve& Curve);
 void InitialiseCurve(string CurveFilename,Curve& Curve);
 // little inline guys
-inline int circularmod(int i, int N);    // mod i by N in a cirucler fashion, ie wrapping around both in the +ve and -ve directions
 inline int incp(int i, int p, int N);    //increment i with p for periodic boundary
 
 
