@@ -35,15 +35,11 @@ int main (void)
     return 0;
 }
 
-/*************************Functions for knot initialisation*****************************/
-
-
 void UpdateState(Curve& Curve)
 {
     UpdateGeometryFromPosition(Curve);
     UpdateVelocityFromGeometry(Curve);
 }
-
 
 void UpdateGeometryFromPosition(Curve& Curve)
 {
@@ -299,9 +295,4 @@ inline int incp(int i, int p, int N)    //increment i with p for periodic bounda
 {
     if(i+p<0) return (N+i+p);
     else return ((i+p)%N);
-}
-inline int sign(int i)
-{
-    if(i==0) return 0;
-    else return i/abs(i);
 }
