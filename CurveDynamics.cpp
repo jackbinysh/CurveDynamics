@@ -44,7 +44,6 @@ void UpdateState(Curve& Curve)
 void UpdateGeometryFromPosition(Curve& Curve)
 {
     int NP = Curve.Curve.size();  //store number of points in knot Curve
-    double torsion;
     for(int s=0; s<NP; s++)    //fwd diff (defined on connecting line) (cell data in paraview)
     {
         // forward difference on the tangents
@@ -65,7 +64,7 @@ void UpdateGeometryFromPosition(Curve& Curve)
         double curvature = sqrt(nx*nx+ny*ny+nz*nz);
         nx /=curvature;
         ny /=curvature;
-        ny /=curvature;
+        nz /=curvature;
         double tx = Curve.Curve[s].tx ;
         double ty =  Curve.Curve[s].ty ;
         double tz = Curve.Curve[s].tz ;
@@ -91,7 +90,7 @@ void UpdateGeometryFromPosition(Curve& Curve)
         double dnyds = 2.0*(Curve.Curve[incp(s,1,NP)].ny-Curve.Curve[incp(s,-1,NP)].ny)/(Curve.Curve[incp(s,1,NP)].length+Curve.Curve[incp(s,-1,NP)].length);
         double dnzds = 2.0*(Curve.Curve[incp(s,1,NP)].nz-Curve.Curve[incp(s,-1,NP)].nz)/(Curve.Curve[incp(s,1,NP)].length+Curve.Curve[incp(s,-1,NP)].length);
 
-        torsion = bx*dnxds+by*dnyds+bz*dnzds;
+        double torsion = bx*dnxds+by*dnyds+bz*dnzds;
         Curve.Curve[s].torsion = torsion ;
     }
 }
