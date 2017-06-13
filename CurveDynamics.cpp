@@ -43,6 +43,8 @@ void UpdateState(Curve& Curve)
 
 void UpdateGeometryFromPosition(Curve& Curve)
 {
+    // reset the global accumulated quantities
+    Curve.length = 0;
     int NP = Curve.Curve.size();  //store number of points in knot Curve
     for(int s=0; s<NP; s++)    //fwd diff (defined on connecting line) (cell data in paraview)
     {
@@ -55,6 +57,7 @@ void UpdateGeometryFromPosition(Curve& Curve)
         Curve.Curve[s].ty = dy/(deltas);
         Curve.Curve[s].tz = dz/(deltas);
         Curve.Curve[s].length = deltas;
+        Curve.length +=deltas;
     }
     for(int s=0; s<NP; s++)    //fwd diff (defined on connecting line) (cell data in paraview)
     {
@@ -123,6 +126,32 @@ void UpdatePositionFromVelocity(Curve& Curve)
         Curve.Curve[s].ycoord = Curve.Curve[s].ycoord + Curve.Curve[s].vy*dtime; 
         Curve.Curve[s].zcoord = Curve.Curve[s].zcoord + Curve.Curve[s].vz*dtime; 
     }
+
+#ifdef SMOOTH
+    // at this point, we apply the 5 point smoothing of Longuett-Higgins and Cokelet
+    static std::vector<double> x(NP); 
+    static std::vector<double> y(NP); 
+    static std::vector<double> z(NP); 
+    for(int s=0; s<NP; s++)    //fwd diff (defined on connecting line) (cell data in paraview)
+    {
+        x[s] = (1/(double)(16))*(-Curve.Curve[incp(s,-2,NP)].xcoord+4*Curve.Curve[incp(s,-1,NP)].xcoord+10*Curve.Curve[incp(s,0,NP)].xcoord+4*Curve.Curve[incp(s,1,NP)].xcoord-Curve.Curve[incp(s,2,NP)].xcoord);
+        y[s] = (1/(double)(16))*(-Curve.Curve[incp(s,-2,NP)].ycoord+4*Curve.Curve[incp(s,-1,NP)].ycoord+10*Curve.Curve[incp(s,0,NP)].ycoord+4*Curve.Curve[incp(s,1,NP)].ycoord-Curve.Curve[incp(s,2,NP)].ycoord);
+        z[s] = (1/(double)(16))*(-Curve.Curve[incp(s,-2,NP)].zcoord+4*Curve.Curve[incp(s,-1,NP)].zcoord+10*Curve.Curve[incp(s,0,NP)].zcoord+4*Curve.Curve[incp(s,1,NP)].zcoord-Curve.Curve[incp(s,2,NP)].zcoord);
+    }
+    
+    static unsigned int counter = 0;
+    if(counter%(int)(SmoothingTimescale/dtime)==0)
+    {
+        for(int s=0; s<NP; s++)    //fwd diff (defined on connecting line) (cell data in paraview)
+        {
+            Curve.Curve[s].xcoord = x[s]; 
+            Curve.Curve[s].ycoord = y[s]; 
+            Curve.Curve[s].zcoord = z[s]; 
+        }
+        counter = 0;
+    }
+    counter ++ ;
+#endif // SMOOTH
     // now the Curve object is out of sync
     Curve.InSync = 0;
 }
@@ -133,7 +162,7 @@ void PrintCurve(double t, const Curve& Curve)
     ss << "globaldata" <<  ".txt";
     ofstream globalout (ss.str().c_str(), std::ofstream::app);
     int printtime = (int)(floor(t+0.5));
-    globalout << printtime << '\t' << Curve.xavgpos << '\t' << Curve.yavgpos << '\t' << Curve.zavgpos << '\t' << Curve.length << '\n';
+    globalout << printtime << '\t'  << Curve.length << '\n';
     globalout.close();
 
     ss.str("");
